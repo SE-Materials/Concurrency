@@ -2,6 +2,18 @@
     "version": "2.0.0",
     "tasks": [
         {
+            "label": "create-build-dir",
+            "type": "shell",
+            "command" : "cmd",
+            "args": [
+                "/C", 
+                "if not exist",
+                "${fileDirname}\\Debug\\",
+                "mkdir", 
+                "${fileDirname}\\Debug\\"
+            ]
+        },
+        {
             "type": "cppbuild",
             "label": "C/C++: cl.exe build active file",
             "command": "cl.exe",
@@ -12,9 +24,9 @@
                 "/Fe:",
                 "${fileDirname}\\Debug\\${fileBasenameNoExtension}.exe",
                 "/Fd:",
-                "${fileDirname}\\Debug\\",
+                "${fileDirname}\\Debug\\${fileBasenameNoExtension}.pdb",
                 "/Fo:",
-                "${fileDirname}\\Debug\\",
+                "${fileDirname}\\Debug\\${fileBasenameNoExtension}.obj",
                 "${file}"
             ],
             "options": {
@@ -27,6 +39,9 @@
                 "kind": "build",
                 "isDefault": true
             },
+            "dependsOn": [
+                "create-build-dir"
+            ],
             "detail": "compiler: cl.exe"
         }
     ]
