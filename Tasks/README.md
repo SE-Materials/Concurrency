@@ -264,16 +264,19 @@ int main(){
 Dealing with `std::packaged_task` usually consists of four steps:
 
 1. Wrap your work:
-    `std::packaged_work<int(int, int)> sumTask([](int a, int b) { return a + b; } );`
+    `std::packaged_work<int(int, int)> sumTask([](int a, int b) { return a + b; } );`  
 <br>
+
 2. Create a `future`:
-    `std::future<int> sumResult = sumTask.get_future();`
+    `std::future<int> sumResult = sumTask.get_future();`  
 <br>
+
 3. Perform the calcuation : 
-    `sumTask(2000, 11);`
+    `sumTask(2000, 11);`  
 <br>
+
 4. Query the result : 
-    `sumResult.get();`
+    `sumResult.get();`  
 <br>
 
 
@@ -356,20 +359,21 @@ int main(){
     * Work packages are instances of the class SumUp (lines 9 - 16). 
     * The work is done in the call operator (lines 11 - 15) which sums up all numbers from beg to end -1 and returns the sum as the result. 
     * `std::packaged_task` (lines 28 - 31) can deal with callables that need two ints and return an `int: int(int, int)`.
-<br>
+<br>  
+
 2. Create the `futures`: I have to create the `future` objects with the help of `std::packaged_task` objects (lines 34 to 3). 
     * The packaged_task is the promise in the communication channel. 
-    * The type of the `future` is defined explicitly as `std::future<int> sumResult1= sumTask1.get_future()`, but the compiler can do that job for me with `auto sumResult1= sumTask1.get_future()`.
-<br>
+    * The type of the `future` is defined explicitly as `std::future<int> sumResult1= sumTask1.get_future()`, but the compiler can do that job for me with `auto sumResult1= sumTask1.get_future()`.  
+<br>  
 
 3. Perform the calculations: Now the calculation takes place. 
     * First, the packaged_task is moved onto the `std::deque` (lines 43 - 46), then each `packaged_task` (lines 54 - 59) is executed in the while loop. 
     * To do that, I move the head of the `std::deque` in an `std::packaged_task` (line 54), move the `packaged_task` in a new `thread` (line 56) and let it run in the background (line 59). 
     * I used the move semantic in lines 54 and 56 because `std::packaged_task` objects are not copyable. 
-    * This restriction holds for all promises, but also for futures and threads. However, there is one exception to this rule: `std:.shared_future`.
+    * This restriction holds for all promises, but also for futures and threads. However, there is one exception to this rule: `std:.shared_future`.  
 <br>
 
-4. Pick up the results: In the final step I ask all futures for their value and sum them up (line 63).
+4. Pick up the results: In the final step I ask all futures for their value and sum them up (line 63).  
 <br>
 
 The class templates `std::promise` and `std::future` provide you the full control over tasks.
