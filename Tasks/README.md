@@ -261,6 +261,107 @@ int main(){
 
 ## `std::packaged_task`
 
+Package a task, which can be executed in 
+* Different context
+* Different function 
+
+However, we can not get the return value directly. 
+
+```cpp
+#include <iostream>
+#include <future>
+
+int factorial(int N) {
+    int res = 1;
+    for (int i=N; i>=1; i--)
+        res *= i;
+    
+    std::cout << "Result is : " << res << std::endl;
+    return res;
+}
+
+int main(int argc, char const *argv[])
+{
+    std::packaged_task<int(int)> t(factorial);
+
+    // -- works --
+    // t(6); // = 720
+
+    // -- Does not work --
+    // auto res = t(6); // Can not get the value, as it returns void
+
+    // -- works -- 
+    auto factorialResult = t.get_future();
+    t(6);
+    std::cout << factorialResult.get() << std::endl;
+
+    // -- works --
+    t.reset();
+    auto factorialResult1 = t.get_future();
+    std::thread t1(std::move(t), 6);
+    t.detach();
+
+    std::cout << factorialResult1.get() << std::endl;
+
+
+    return 0;
+}
+
+```
+
+* `t(6)` : Works, But it does not return any value.
+  * It returns a future, which we can use to get the result.
+  * `t(6)`; `t.get_future().get()`
+
+* Can not pass parameters to the `packaged_task` like `thread`
+  * `std::thread t1(factorial, 6);`
+  * `std::packaged_task<int(int)> t(factorial);`
+  * **Wrong** : `std::packaged_task<int(int)> t(factorial, 6);`
+  * `std::packaged_task<int()> t(std::bind(factorial, 6));` bind returns a function object. 
+    * And the task would not take any parameters any more. Change in the type!
+    * `t();`
+
+  
+### Do we a need a `std::packaged_task` ?
+
+* A function object obtained by `std::bind` can be passed around. So, why do we need `packaged_task` ?
+
+```cpp
+auto t = std::bind(factorial, 6);
+t(); // in same or different context..
+```
+
+* The main adavantage of `packaged_task` is that it can link a `callable` object to a `future`.
+
+### Example: 
+
+* I don't want to execute the task in the same function.
+* But I want the result.
+
+```cpp
+std::deque<std::packaged_task<int()>> task_q;
+
+void thread_1() {
+  std::packaged_task<int()> t; 
+  t = std::move(task_q.front()); task_q.pop_front();
+
+  t();
+}
+
+int main() {
+  std::packaged_task<int()> t(bind(factorial, 6));
+
+  // I will not execute here. Hoping that somebody will pop up the task and execute.
+  // But it has some return value.. how do we get that ? - Using future.
+  task_q.push_back(std::move(t));
+
+  std::thread t1(thread_1);
+
+  t1.join();
+}
+
+```
+
 Dealing with `std::packaged_task` usually consists of four steps:
 
 1. Wrap your work:
